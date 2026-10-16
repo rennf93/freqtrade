@@ -810,6 +810,57 @@ CONF_SCHEMA = {
                     "type": "string",
                     "enum": ["error", "info"],
                 },
+                "security": {
+                    "description": "Optional request screening via fastapi-guard.",
+                    "type": "object",
+                    "properties": {
+                        "enabled": {
+                            "description": "Enable request screening (requires fastapi-guard).",
+                            "type": "boolean",
+                            "default": False,
+                        },
+                        "rate_limit": {
+                            "description": "Maximum requests per IP within rate_limit_window.",
+                            "type": "integer",
+                            "minimum": 1,
+                            "default": 300,
+                        },
+                        "rate_limit_window": {
+                            "description": "Rate limit window in seconds.",
+                            "type": "integer",
+                            "minimum": 1,
+                            "default": 60,
+                        },
+                        "whitelist": {
+                            "description": "If not empty, only these IPs / CIDRs may connect.",
+                            "type": "array",
+                            "items": {"type": "string"},
+                        },
+                        "blacklist": {
+                            "description": "IPs / CIDRs that are always rejected.",
+                            "type": "array",
+                            "items": {"type": "string"},
+                        },
+                        "trusted_proxies": {
+                            "description": "Proxies whose X-Forwarded-For header is trusted.",
+                            "type": "array",
+                            "items": {"type": "string"},
+                            "default": ["127.0.0.1", "::1"],
+                        },
+                        "trusted_proxy_depth": {
+                            "description": "Trusted proxies in the X-Forwarded-For chain.",
+                            "type": "integer",
+                            "minimum": 1,
+                            "default": 1,
+                        },
+                        "enable_penetration_detection": {
+                            "description": "Reject attack patterns in URL or headers.",
+                            "type": "boolean",
+                            "default": True,
+                        },
+                    },
+                    "additionalProperties": False,
+                },
             },
             "required": [
                 "enabled",

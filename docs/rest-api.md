@@ -58,6 +58,47 @@ secrets.token_hex()
     Please make sure to select a very strong, unique password to protect your bot from unauthorized access.
     Also change `jwt_secret_key` to something random (no need to remember this, but it'll be used to encrypt your session, so it better be something unique!). This value should also be 32 characters or longer to be safe.
 
+### Request screening (optional)
+
+The API can optionally screen incoming requests with [fastapi-guard](https://github.com/Guard-Core/fastapi-guard): a per-IP rate limit, an IP allowlist / blocklist and rejection of requests with common attack patterns in the URL or headers.
+This is disabled by default, and fastapi-guard is not imported unless you enable it.
+It does not replace a strong password, a VPN / ssh tunnel or a reverse proxy - it is an additional layer if the API is reachable by others.
+
+Install the optional dependency (inside your virtual environment) using `requirements-security.txt`, then enable it in the `api_server` section:
+
+``` json
+    "api_server": {
+        //...
+        "security": {
+            "enabled": true,
+            "rate_limit": 300,
+            "rate_limit_window": 60,
+            "whitelist": [],
+            "blacklist": [],
+            "trusted_proxies": ["127.0.0.1", "::1"],
+            "enable_penetration_detection": true
+        }
+    },
+```
+
+| Parameter | Description |
+|------------|-------------|
+| `enabled` | Enable request screening. Freqtrade fails to start if this is `true` and fastapi-guard is not installed. <br>**Default:** `false`<br> **Datatype:** Boolean |
+| `rate_limit` | Maximum number of requests per IP within `rate_limit_window`. Further requests get a `429` response. FreqUI polls the API regularly, so don't set this too low. <br>**Default:** `300`<br> **Datatype:** Integer |
+| `rate_limit_window` | Rate limit window in seconds. <br>**Default:** `60`<br> **Datatype:** Integer |
+| `whitelist` | List of IPs or CIDR ranges. If not empty, all other IPs get a `403` response. IPs on this list are not rate limited or screened for attack patterns. <br>**Default:** `[]`<br> **Datatype:** List of strings |
+| `blacklist` | List of IPs or CIDR ranges that always get a `403` response. <br>**Default:** `[]`<br> **Datatype:** List of strings |
+| `trusted_proxies` | Proxies (IPs or CIDR ranges) whose `X-Forwarded-For` header is used to determine the client IP. For any other peer the header is ignored, so clients cannot spoof their address. Add your reverse proxy here if it's not on the same host (e.g. the docker network gateway). <br>**Default:** `["127.0.0.1", "::1"]`<br> **Datatype:** List of strings |
+| `trusted_proxy_depth` | Number of trusted proxies in the `X-Forwarded-For` chain. <br>**Default:** `1`<br> **Datatype:** Integer |
+| `enable_penetration_detection` | Reject requests with attack patterns (SQL injection, XSS, path traversal, ...) in the URL or headers with a `400` response. Repeated offenders are banned in memory for one hour. <br>**Default:** `true`<br> **Datatype:** Boolean |
+
+Behavior to be aware of:
+
+* Request bodies are never scanned, and no security headers are added to responses.
+* The websocket (`/api/v1/message/ws`) is not screened and keeps relying on `ws_token`. Only plain HTTP requests are rate limited and filtered.
+* Rate limit and ban state is kept in memory (no Redis) and is reset when the bot restarts.
+* Behind a reverse proxy on the same host, make sure the proxy sets `X-Forwarded-For`. Otherwise all requests are seen as coming from the proxy and share one rate limit.
+
 ### Configuration with docker
 
 If you run your bot using docker, you'll need to have the bot listen to incoming connections. The security is then handled by docker.

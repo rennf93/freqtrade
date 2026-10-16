@@ -12,6 +12,7 @@ from starlette.responses import JSONResponse
 from freqtrade.configuration import running_in_docker
 from freqtrade.constants import Config
 from freqtrade.exceptions import OperationalException
+from freqtrade.rpc.api_server.security import add_security_middleware
 from freqtrade.rpc.api_server.uvicorn_threaded import UvicornServer
 from freqtrade.rpc.api_server.webserver_bgwork import ApiBG
 from freqtrade.rpc.api_server.ws.message_stream import MessageStream
@@ -282,6 +283,8 @@ class ApiServer(RPCHandler):
         # UI Router MUST be last!
         app.include_router(router_ui, prefix="")
 
+        # Added before CORS, so CORS wraps the guard and the browser can read its 403 / 429.
+        add_security_middleware(app, config["api_server"])
         app.add_middleware(
             CORSMiddleware,
             allow_origins=config["api_server"].get("CORS_origins", []),

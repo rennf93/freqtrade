@@ -80,6 +80,7 @@ dependencies = [
 [project.optional-dependencies]
 # Requirements used for submodules
 plot = ["plotly>=4.0"]
+security = ["fastapi-guard"]
 hyperopt = [
   "cmaes",
   "filelock",
@@ -127,7 +128,7 @@ jupyter = [
   "nbstripout",
 ]
 all = [
-  "freqtrade[plot,hyperopt,freqai,freqai_rl,jupyter]",
+  "freqtrade[plot,hyperopt,security,freqai,freqai_rl,jupyter]",
 ]
 dev = [
   "freqtrade[all,develop]",

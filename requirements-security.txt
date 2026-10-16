@@ -1,0 +1,5 @@
+# Include all requirements to run the bot.
+-r requirements.txt
+
+# Optional request screening for the REST API
+fastapi-guard==8.1.1
