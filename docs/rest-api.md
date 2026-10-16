@@ -60,7 +60,7 @@ secrets.token_hex()
 
 ### Request screening (optional)
 
-The API can optionally screen incoming requests with [fastapi-guard](https://github.com/Guard-Core/fastapi-guard): a per-IP rate limit, an IP allowlist / blocklist and rejection of requests with common attack patterns in the URL or headers.
+The API can optionally screen incoming requests with [fastapi-guard](https://github.com/Guard-Core/fastapi-guard): a per-IP rate limit, an IP allowlist / blocklist and rejection of requests with common attack patterns in the URL or headers (every detection category except `ssrf`, because browsers send the page address as `Referer` and guard-core 4.4.0 flags localhost and LAN addresses in it, which would break FreqUI).
 This is disabled by default, and fastapi-guard is not imported unless you enable it.
 It does not replace a strong password, a VPN / ssh tunnel or a reverse proxy - it is an additional layer if the API is reachable by others.
 

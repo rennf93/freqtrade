@@ -29,6 +29,7 @@ def add_security_middleware(app: FastAPI, api_config: dict) -> None:
 
     try:
         from guard import PureASGISecurityMiddleware, SecurityConfig
+        from guard_core.handlers.suspatterns_handler import ALL_DETECTION_CATEGORIES
     except ImportError as e:
         raise OperationalException(
             "`api_server.security.enabled` is set, but fastapi-guard is not installed. "
@@ -46,6 +47,9 @@ def add_security_middleware(app: FastAPI, api_config: dict) -> None:
         enable_penetration_detection=security.get("enable_penetration_detection", True),
         # Request bodies carry strategy code and config values - never scan them.
         detection_scan_body=False,
+        # Browsers send the page address as Referer, and guard-core 4.4.0 flags localhost and
+        # LAN addresses in it as ssrf.
+        enabled_detection_categories=frozenset(ALL_DETECTION_CATEGORIES) - {"ssrf"},
         # FreqUI is served by the bot itself, don't add headers to its responses.
         security_headers={"enabled": False},
     )

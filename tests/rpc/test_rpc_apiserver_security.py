@@ -190,6 +190,22 @@ def test_security_attack_in_query_blocked(make_client):
     assert client.get(f"{BASE_URI}/ping").status_code == 200
 
 
+@pytest.mark.parametrize(
+    "referer",
+    ["http://localhost:8080/", "http://127.0.0.1:8080/", "http://192.168.1.20:8080/"],
+)
+def test_security_local_referer_not_blocked(make_client, referer):
+    client = make_client({"enabled": True})
+    rc = client.get(f"{BASE_URI}/ping", headers={"Referer": referer})
+    assert rc.status_code == 200
+
+
+def test_security_attack_in_referer_blocked(make_client):
+    client = make_client({"enabled": True})
+    rc = client.get(f"{BASE_URI}/ping", headers={"Referer": "<script>alert(1)</script>"})
+    assert rc.status_code == 400
+
+
 def test_security_body_not_scanned(make_client):
     client = make_client({"enabled": True})
     rc = client.post(
